@@ -1,0 +1,21 @@
+{
+  "env": {
+    "sysroot": "${HOME}/raspberrypi/rootfs",
+    "tools": "${HOME}/raspberrypi/tools"
+  },
+  "configurations": [
+    {
+      "name": "RPi",
+      "includePath": [
+        "${sysroot}/**",
+        "${workspaceFolder}/**"
+      ],
+      "defines": [],
+      "compilerPath": "${tools}/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++",
+      "cStandard": "c11",
+      "cppStandard": "c++14",
+      "intelliSenseMode": "gcc-arm"
+    }
+  ],
+  "version": 4
+}
