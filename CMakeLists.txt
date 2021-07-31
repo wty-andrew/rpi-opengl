@@ -14,11 +14,18 @@ link_directories(
   ${CMAKE_SYSROOT}/opt/vc/lib
 )
 
-add_executable(main src/main.cpp)
-target_link_libraries(main
+add_library(common STATIC
+  src/window.cpp
+)
+target_link_libraries(common
   bcm_host
   vcos
   vchiq_arm
-  GLESv2
   EGL
+)
+
+add_executable(main src/main.cpp)
+target_link_libraries(main
+  GLESv2
+  common
 )
