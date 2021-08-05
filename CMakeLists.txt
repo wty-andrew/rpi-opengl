@@ -16,12 +16,15 @@ link_directories(
 
 add_library(common STATIC
   src/window.cpp
+  src/shader.cpp
+  src/utils.cpp
 )
 target_link_libraries(common
   bcm_host
   vcos
   vchiq_arm
   EGL
+  GLESv2
 )
 
 add_executable(main src/main.cpp)
