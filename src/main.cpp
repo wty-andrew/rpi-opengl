@@ -1,5 +1,6 @@
 #include "window.h"
 #include "shader.h"
+#include "input.h"
 
 #include <GLES2/gl2.h>
 
@@ -10,6 +11,8 @@
 int main(int argc, char** argv) {
   Window window;
   window.init();
+  Input::init();
+  atexit(Input::terminate);
 
   std::string vertex_shader_code = R"(
 attribute vec4 a_position;
@@ -49,24 +52,41 @@ void main() {
   Shader shader;
   shader.load(vertex_shader_code, fragment_shader_code);
 
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  shader.use();
-
   GLuint position_loc = glGetAttribLocation(shader.get_program(), "a_position");
-  glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 0, position_vertices);
-  glEnableVertexAttribArray(position_loc);
-
   GLuint color_loc = glGetAttribLocation(shader.get_program(), "a_color");
-  glVertexAttribPointer(color_loc, 3, GL_FLOAT, GL_FALSE, 0, color_vertices);
-  glEnableVertexAttribArray(color_loc);
 
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  bool running = true;
+  while (running) {
+    Event event;
+    while (Input::poll_event(event)) {
+      switch (event.type) {
+        case Event::Type::Keyboard: {
+          if (event.key.code == KeyCode::Escape) running = false;
+          break;
+        }
 
-  window.update();
+        default:
+          break;
+      }
+    }
 
-  std::this_thread::sleep_for(std::chrono::seconds(3));
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    shader.use();
+
+    glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 0, position_vertices);
+    glEnableVertexAttribArray(position_loc);
+
+    glVertexAttribPointer(color_loc, 3, GL_FLOAT, GL_FALSE, 0, color_vertices);
+    glEnableVertexAttribArray(color_loc);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    window.update();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
 
   return 0;
 }

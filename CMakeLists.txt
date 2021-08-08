@@ -17,6 +17,8 @@ link_directories(
 add_library(common STATIC
   src/window.cpp
   src/shader.cpp
+  src/event.cpp
+  src/input.cpp
   src/utils.cpp
 )
 target_link_libraries(common
