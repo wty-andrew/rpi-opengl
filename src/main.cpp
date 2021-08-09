@@ -8,6 +8,18 @@
 #include <chrono>
 #include <thread>
 
+GLuint create_texture_2d(int width, int height, GLubyte* data) {
+  GLuint texture_id;
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  return texture_id;
+}
+
 int main(int argc, char** argv) {
   Window window;
   window.init();
@@ -16,36 +28,47 @@ int main(int argc, char** argv) {
 
   std::string vertex_shader_code = R"(
 attribute vec4 a_position;
-attribute vec4 a_color;
+attribute vec2 a_tex_coord;
 
-varying vec4 v_color;
+varying vec2 v_tex_coord;
 
 void main() {
   gl_Position = a_position;
-  v_color = a_color;
+  v_tex_coord = a_tex_coord;
 }
 )";
 
   std::string fragment_shader_code = R"(
 precision mediump float;
-varying vec4 v_color;
+varying vec2 v_tex_coord;
+
+uniform sampler2D u_texture;
 
 void main() {
-  gl_FragColor = v_color;
+  gl_FragColor = texture2D(u_texture, v_tex_coord);
 }
 )";
 
   // clang-format off
-  GLfloat position_vertices[] = {
-     0.0f,  0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f
+  GLfloat vertices[] = {
+    // position         // tex coord
+     0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
+     0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
+    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+    -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, // top left
   };
 
-  GLfloat color_vertices[] = {
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f
+  GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3,
+  };
+
+  // textures are loaded left to right, bottom to top
+  GLubyte pixels[] = {
+    255,   0,   0, // Red (bottom left)
+      0, 255,   0, // Green (bottom right)
+      0,   0, 255, // Blue (top left)
+    255, 255,   0, // Yellow (top right)
   };
   // clang-format on
 
@@ -53,7 +76,9 @@ void main() {
   shader.load(vertex_shader_code, fragment_shader_code);
 
   GLuint position_loc = glGetAttribLocation(shader.get_program(), "a_position");
-  GLuint color_loc = glGetAttribLocation(shader.get_program(), "a_color");
+  GLuint tex_coord_loc = glGetAttribLocation(shader.get_program(), "a_tex_coord");
+
+  GLuint texture_id = create_texture_2d(2, 2, pixels);
 
   bool running = true;
   while (running) {
@@ -75,13 +100,18 @@ void main() {
 
     shader.use();
 
-    glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 0, position_vertices);
+    glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vertices);
     glEnableVertexAttribArray(position_loc);
 
-    glVertexAttribPointer(color_loc, 3, GL_FLOAT, GL_FALSE, 0, color_vertices);
-    glEnableVertexAttribArray(color_loc);
+    glVertexAttribPointer(tex_coord_loc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vertices[3]);
+    glEnableVertexAttribArray(tex_coord_loc);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    shader.set_uniform("u_texture", 0);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
     window.update();
 

@@ -26,6 +26,10 @@ public:
 
   void use();
 
+  void set_uniform(const std::string& name, int value) const;
+
+  // TODO: add other common uniform settings
+
 private:
   GLuint program_ = 0;
 };

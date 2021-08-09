@@ -19,6 +19,7 @@ add_library(common STATIC
   src/shader.cpp
   src/event.cpp
   src/input.cpp
+  src/texture.cpp
   src/utils.cpp
 )
 target_link_libraries(common

@@ -77,3 +77,7 @@ void Shader::unload() {
 }
 
 void Shader::use() { glUseProgram(program_); }
+
+void Shader::set_uniform(const std::string& name, int value) const {
+  glUniform1i(glGetUniformLocation(program_, name.c_str()), value);
+}
